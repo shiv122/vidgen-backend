@@ -1,0 +1,19 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+.venv/
+*.sqlite3
+db.sqlite3
+backend/media/
+.env
+.env.local
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.pnpm-store/
+
+# OS / editor
+.DS_Store
+*.log
