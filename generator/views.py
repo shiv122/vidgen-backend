@@ -11,9 +11,9 @@ from rest_framework.views import APIView
 from . import pipeline
 from .models import VideoJob, Voice
 from .serializers import (
-    ElevenVoiceSerializer,
     JobCreateSerializer,
     JobStatusSerializer,
+    LibraryVoiceSerializer,
     VoiceCreateSerializer,
     VoiceSerializer,
 )
@@ -24,15 +24,15 @@ def _spawn(target, *args):
     threading.Thread(target=target, args=args, daemon=True).start()
 
 
-class ElevenLabsVoiceListView(APIView):
-    """GET /api/elevenlabs-voices/ — list voices from the ElevenLabs account."""
+class LibraryVoiceListView(APIView):
+    """GET /api/library-voices/ — list available voices from the voice library."""
 
     def get(self, request):
         try:
             voices = elevenlabs.list_voices()
         except elevenlabs.ElevenLabsError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
-        return Response(ElevenVoiceSerializer(voices, many=True).data)
+        return Response(LibraryVoiceSerializer(voices, many=True).data)
 
 
 class VoiceListCreateView(APIView):

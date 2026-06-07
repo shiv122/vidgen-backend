@@ -106,7 +106,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"File exceeds the {settings.MAX_UPLOAD_MB}MB limit."
             )
-        # D-ID requires a face image of at least 100x100 px.
+        # The animation provider requires a face image of at least 100x100 px.
         from PIL import Image
 
         try:
@@ -168,8 +168,8 @@ class JobStatusSerializer(serializers.ModelSerializer):
         ]
 
 
-class ElevenVoiceSerializer(serializers.Serializer):
-    """A voice from the ElevenLabs account library."""
+class LibraryVoiceSerializer(serializers.Serializer):
+    """A voice from the available voice library."""
 
     voice_id = serializers.CharField()
     name = serializers.CharField()
