@@ -1,26 +1,24 @@
 # Nixpacks build config for Coolify.
 # https://coolify.io/docs/applications/django
+#
+# Do NOT put python in nixPkgs — Nixpacks' Python provider already supplies a
+# prebuilt CPython (detected from pyproject.toml / requirements.txt). Forcing
+# python313 via nixPkgs makes Nix compile CPython + Cython from source on every
+# build, which never finishes inside Coolify's build window (the infinite loop).
 
 [phases.setup]
-# python313 + pip to match requires-python >=3.13; ffmpeg is needed at runtime
-# by generator/services/compositor.py for the facecam overlay.
-nixPkgs = ["python313", "python313Packages.pip", "ffmpeg-full"]
-
-[phases.install]
-cmds = [
-  "python -m venv /opt/venv",
-  "/opt/venv/bin/pip install --upgrade pip",
-  "/opt/venv/bin/pip install -r requirements.txt",
-]
+# ffmpeg is needed at runtime by generator/services/compositor.py for the
+# facecam overlay. Install via apt so we don't drag in a second Nix Python.
+aptPkgs = ["ffmpeg"]
 
 [phases.build]
-cmds = ["/opt/venv/bin/python manage.py collectstatic --noinput"]
+# Nixpacks puts the install venv on PATH, so `python` is the project venv.
+cmds = ["python manage.py collectstatic --noinput"]
 
 [start]
-# Run migrations, then serve. Coolify provides $PORT (defaults to 8000).
-# --timeout 660 > VIDEO_POLL_TIMEOUT (600s): the render is polled synchronously
-# inside the request, so a short worker timeout would kill in-flight jobs.
-cmd = "/opt/venv/bin/python manage.py migrate --noinput && /opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 660"
+# Coolify provides $PORT (defaults to 8000). --timeout 660 > VIDEO_POLL_TIMEOUT
+# (600s): the render is polled synchronously inside the request.
+cmd = "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 660"
 
 [variables]
 PYTHONUNBUFFERED = "1"
