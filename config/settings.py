@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,8 +84,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": config("DB_NAME", default="vidgen"),
+        "USER": config("DB_USER", default="root"),
+        "PASSWORD": config("DB_PASSWORD", default=""),
+        "HOST": config("DB_HOST", default="127.0.0.1"),
+        "PORT": config("DB_PORT", default="3306"),
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 
@@ -124,6 +130,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+# Collected by `manage.py collectstatic` during the Nixpacks build phase and
+# served by WhiteNoise in production.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Default storages: WhiteNoise serves static files; media stays on local disk.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (user uploads + generated audio)
 MEDIA_URL = "media/"
@@ -141,23 +160,18 @@ DO_DEFAULT_REGION = config("DO_DEFAULT_REGION", default="")
 DO_ENDPOINT = config("DO_ENDPOINT", default="")
 
 if DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY and DO_BUCKET and DO_ENDPOINT:
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-            "OPTIONS": {
-                "access_key": DO_ACCESS_KEY_ID,
-                "secret_key": DO_SECRET_ACCESS_KEY,
-                "bucket_name": DO_BUCKET,
-                "region_name": DO_DEFAULT_REGION,
-                "endpoint_url": DO_ENDPOINT,
-                "default_acl": "public-read",
-                "querystring_auth": False,
-                "file_overwrite": False,
-                "location": "vidgen",
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": DO_ACCESS_KEY_ID,
+            "secret_key": DO_SECRET_ACCESS_KEY,
+            "bucket_name": DO_BUCKET,
+            "region_name": DO_DEFAULT_REGION,
+            "endpoint_url": DO_ENDPOINT,
+            "default_acl": "public-read",
+            "querystring_auth": False,
+            "file_overwrite": False,
+            "location": "vidgen",
         },
     }
 

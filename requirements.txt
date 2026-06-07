@@ -1,0 +1,11 @@
+Django==5.2.15
+djangorestframework==3.17.1
+django-cors-headers==4.9.0
+django-storages==1.14.6
+boto3==1.43.23
+pillow==12.2.0
+python-decouple==3.8
+requests==2.34.2
+gunicorn==23.0.0
+whitenoise==6.8.2
+PyMySQL==1.2.0

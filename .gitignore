@@ -17,3 +17,6 @@ out/
 # OS / editor
 .DS_Store
 *.log
+
+# Django collected static (build artifact)
+staticfiles/

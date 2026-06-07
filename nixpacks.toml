@@ -1,0 +1,27 @@
+# Nixpacks build config for Coolify.
+# https://coolify.io/docs/applications/django
+
+[phases.setup]
+# python313 + pip to match requires-python >=3.13; ffmpeg is needed at runtime
+# by generator/services/compositor.py for the facecam overlay.
+nixPkgs = ["python313", "python313Packages.pip", "ffmpeg-full"]
+
+[phases.install]
+cmds = [
+  "python -m venv /opt/venv",
+  "/opt/venv/bin/pip install --upgrade pip",
+  "/opt/venv/bin/pip install -r requirements.txt",
+]
+
+[phases.build]
+cmds = ["/opt/venv/bin/python manage.py collectstatic --noinput"]
+
+[start]
+# Run migrations, then serve. Coolify provides $PORT (defaults to 8000).
+# --timeout 660 > VIDEO_POLL_TIMEOUT (600s): the render is polled synchronously
+# inside the request, so a short worker timeout would kill in-flight jobs.
+cmd = "/opt/venv/bin/python manage.py migrate --noinput && /opt/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 660"
+
+[variables]
+PYTHONUNBUFFERED = "1"
+PYTHONDONTWRITEBYTECODE = "1"
