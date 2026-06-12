@@ -13,6 +13,11 @@ def index(request):
     return JsonResponse({"status": "ok", "service": "vidgen-backend"})
 
 
+def health(request):
+    """Dedicated health check endpoint."""
+    return JsonResponse({"status": "ok", "service": "vidgen-backend"})
+
+
 def handler404(request, exception):
     return JsonResponse(
         {"error": "not_found", "detail": "The requested resource was not found."},

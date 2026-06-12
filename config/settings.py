@@ -209,10 +209,25 @@ DEFAULT_RESOLUTION = config("DEFAULT_RESOLUTION", default=480, cast=int)
 # Validation / safety limits
 MAX_TEXT_LEN = config("MAX_TEXT_LEN", default=2500, cast=int)
 MAX_UPLOAD_MB = config("MAX_UPLOAD_MB", default=25, cast=int)
-# Background videos can be larger than image/audio uploads.
-MAX_VIDEO_MB = config("MAX_VIDEO_MB", default=200, cast=int)
+# Background videos can be much larger than image/audio uploads.
+MAX_VIDEO_MB = config("MAX_VIDEO_MB", default=500, cast=int)
 # D-ID rejects images smaller than 100x100 px.
 MIN_IMAGE_DIM = config("MIN_IMAGE_DIM", default=100, cast=int)
+
+# D-ID's 10 MB image limit is on the DECODED image (~3.3 MP @ 3 bytes/px), not
+# the file size. We downscale every uploaded image to this megapixel budget
+# before sending it (generator/services/imaging.py). 3.0 MP -> ~9 MB decoded,
+# safely under the limit. Output is only 360-720p, so this loses no quality.
+DID_MAX_IMAGE_MP = config("DID_MAX_IMAGE_MP", default=3.0, cast=float)
+DID_IMAGE_JPEG_QUALITY = config("DID_IMAGE_JPEG_QUALITY", default=88, cast=int)
+
+# Allow large multipart request bodies (big background-video uploads). File
+# fields are excluded from DATA_UPLOAD_MAX_MEMORY_SIZE, but raise it for safety.
+DATA_UPLOAD_MAX_MEMORY_SIZE = config(
+    "DATA_UPLOAD_MAX_MEMORY_SIZE",
+    default=(MAX_VIDEO_MB + MAX_UPLOAD_MB + 10) * 1024 * 1024,
+    cast=int,
+)
 
 # How long to poll the video render before giving up (s) and the poll interval.
 VIDEO_POLL_TIMEOUT = config("VIDEO_POLL_TIMEOUT", default=600, cast=int)

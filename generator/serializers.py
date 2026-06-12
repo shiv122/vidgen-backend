@@ -2,6 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from .models import VideoJob, Voice
+from .services import imaging
 
 
 class VoiceCreateSerializer(serializers.ModelSerializer):
@@ -128,6 +129,12 @@ class JobCreateSerializer(serializers.ModelSerializer):
         if value and value not in (360, 480, 720):
             raise serializers.ValidationError("Resolution must be 360, 480, or 720.")
         return value or settings.DEFAULT_RESOLUTION
+
+    def create(self, validated_data):
+        # D-ID limits images by decoded resolution (~3.3 MP), not file size, so
+        # downscale before storing — the stored copy is exactly what D-ID fetches.
+        validated_data["image"] = imaging.normalize_for_did(validated_data["image"])
+        return super().create(validated_data)
 
     def validate_overlay_keyframes(self, value):
         if not value:
